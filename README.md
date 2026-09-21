@@ -1,29 +1,37 @@
 # SpendWise Dashboard
 
-A budget tracking dashboard built step by step. This version adds a JavaScript foundation on top of the Week 4 visual dashboard shell (CSS Grid + Flexbox layout).
+A budget tracking dashboard built step by step. This version makes SpendWise fully interactive — user actions now update the page directly, not just the console.
 
-## What it does
+## What improvements were made this week
 
-SpendWise displays budget categories (Food, Transport, Rent, Entertainment, Savings, Utilities) in a dashboard layout. This week's update adds JavaScript logic that stores budgeting data, collects user input, performs calculations, and prints a clearly labeled budget summary to the browser console.
+- Added a **Set Your Budget** panel that lets the user type in a monthly budget and apply it live.
+- Added an **Add an Expense** form (name, amount, category dropdown) that adds new expenses to the app's data and immediately updates the page.
+- Added a **Summary** panel showing Total Spent and Remaining Balance, which recalculates automatically whenever the budget or expenses change.
+- Added an **All Expenses** list that renders every stored expense directly on the page.
 
-## JavaScript concepts implemented
+## How conditionals are used
 
-- **Variables** — `monthlyBudget` and `currency` store budget-level data; `expenses` is an array of objects, each representing one expense (name, amount, category).
-- **User input** — `getUserBudget()` uses `prompt()` to let the user set their monthly budget; `getNewExpense()` uses `prompt()` to collect a new expense's name, amount, and category, then adds it to the `expenses` array.
-- **Calculations** — `calculateTotalExpenses()` sums all expense amounts; `calculateRemainingBalance()` subtracts total expenses from the budget; `calculateAverageExpense()` finds the average expense amount.
-- **Functions** — All logic is organized into small, reusable functions rather than one long script, making the code easier to read, test, and extend later.
+In `updateSummary()`, an `if / else if / else` chain checks the remaining balance: it shows a warning if the user is over budget, a caution message if they're close to their limit (within 10% of the budget), or a positive "on track" message otherwise. Input validation in both the budget and expense forms also uses conditionals (`isNaN()`, empty string, and `<= 0` checks) to reject invalid entries before they're processed.
 
-## How it works
+## How arrays are used to store data
 
-1. On page load, `runBudgetSummary()` runs automatically using starting sample data.
-2. It calls the calculation functions to get total expenses, remaining balance, and average expense.
-3. Results are printed to the browser console with clear labels (e.g., "Monthly Budget: $2000.00").
-4. If expenses exceed the budget, a warning is printed showing how far over budget the user is.
-5. `getUserBudget()` and `getNewExpense()` are available to interactively collect input via `prompt()` — uncomment their calls at the bottom of `script.js` to try them.
+All expenses are stored in a single `expenses` array of objects, each with `name`, `amount`, and `category` properties. Adding a new expense uses `expenses.push()` rather than creating new individual variables, so the app can hold any number of expense records.
+
+## How the DOM is updated
+
+`renderExpenseList()` clears and rebuilds the `<ul id="expense-list">` element by looping through the `expenses` array and creating a new `<li>` for each one. `updateSummary()` writes the calculated total, remaining balance, and status message directly into `<span>` and `<p>` elements on the page using `textContent`, so the numbers on screen always reflect the current data.
+
+## How user interactions are handled through events
+
+Both the "Set Budget" and "Add Expense" buttons have `addEventListener("click", ...)` handlers. Clicking "Set Budget" reads and validates the budget input, updates the `monthlyBudget` variable, and refreshes the summary. Clicking "Add Expense" reads and validates the name/amount/category inputs, pushes a new object into the `expenses` array, clears the form, and calls `refreshDashboard()` to re-render both the expense list and the summary.
+
+## Challenges encountered
+
+Keeping the script correctly linked to the HTML (`<script src="script.js"></script>`) was an early issue that caused the JavaScript to silently not run at all — fixed by double-checking the tag is present before `</body>`. Making sure the summary and expense list update *together* after every change (rather than only one updating) was solved by wrapping both update calls inside a single `refreshDashboard()` function, called after every data change.
 
 ## Files
 
-- `index.html` — dashboard page structure
-- `style.css` — dashboard styling (Grid, Flexbox, theme variables, responsive breakpoint)
-- `script.js` — JavaScript logic for budget data, input, calculations, and console output
+- `index.html` — dashboard structure, controls, and expense list
+- `style.css` — dashboard styling (Grid, Flexbox, theme variables, responsive breakpoint, control card styling)
+- `script.js` — budget/expense data, calculations, DOM rendering, and event listeners
 - `README.md` — this file

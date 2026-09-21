@@ -1,5 +1,7 @@
+// ===== SpendWise: Interactive Budget Tracker =====
+
+// 1. Data storage — arrays for multiple expense records
 let monthlyBudget = 2000;
-let currency = "USD";
 
 let expenses = [
     { name: "Groceries", amount: 45.30, category: "Food" },
@@ -9,25 +11,25 @@ let expenses = [
     { name: "Coffee", amount: 4.50, category: "Food" }
 ];
 
-function getUserBudget() {
-    let input = prompt("Enter your monthly budget:", monthlyBudget);
-    if (input !== null && input !== "") {
-        monthlyBudget = Number(input);
-    }
-    return monthlyBudget;
-}
+// 2. Grab DOM elements
+const budgetInput = document.getElementById("budget-input");
+const setBudgetBtn = document.getElementById("set-budget-btn");
+const budgetStatus = document.getElementById("budget-status");
 
-function getNewExpense() {
-    let name = prompt("Enter expense name:");
-    let amount = Number(prompt("Enter expense amount:"));
-    let category = prompt("Enter expense category:");
-    let newExpense = { name: name, amount: amount, category: category };
-    expenses.push(newExpense);
-    return newExpense;
-}
+const expenseNameInput = document.getElementById("expense-name");
+const expenseAmountInput = document.getElementById("expense-amount");
+const expenseCategoryInput = document.getElementById("expense-category");
+const addExpenseBtn = document.getElementById("add-expense-btn");
 
+const totalSpentEl = document.getElementById("total-spent");
+const remainingBalanceEl = document.getElementById("remaining-balance");
+const budgetWarningEl = document.getElementById("budget-warning");
+const expenseListEl = document.getElementById("expense-list");
+
+// 3. Calculation functions
 function calculateTotalExpenses(expenseList) {
     let total = 0;
+    // Loop through every expense record
     for (let i = 0; i < expenseList.length; i++) {
         total += expenseList[i].amount;
     }
@@ -38,33 +40,90 @@ function calculateRemainingBalance(budget, totalExpenses) {
     return budget - totalExpenses;
 }
 
-function calculateAverageExpense(expenseList) {
-    if (expenseList.length === 0) return 0;
-    let total = calculateTotalExpenses(expenseList);
-    return total / expenseList.length;
-}
+// 4. DOM update functions
 
-function runBudgetSummary() {
-    let totalExpenses = calculateTotalExpenses(expenses);
-    let remainingBalance = calculateRemainingBalance(monthlyBudget, totalExpenses);
-    let averageExpense = calculateAverageExpense(expenses);
+// Render the full expense list on the page using a loop
+function renderExpenseList() {
+    expenseListEl.innerHTML = ""; // clear existing content
 
-    console.log("===== SpendWise Budget Summary =====");
-    console.log("Monthly Budget: $" + monthlyBudget.toFixed(2));
-    console.log("Total Expenses: $" + totalExpenses.toFixed(2));
-    console.log("Remaining Balance: $" + remainingBalance.toFixed(2));
-    console.log("Average Expense: $" + averageExpense.toFixed(2));
-    console.log("Number of Expenses: " + expenses.length);
+    for (let i = 0; i < expenses.length; i++) {
+        let expense = expenses[i];
 
-    if (remainingBalance < 0) {
-        console.log("Warning: You are over budget by $" + Math.abs(remainingBalance).toFixed(2));
-    } else {
-        console.log("You are within budget.");
+        let listItem = document.createElement("li");
+        listItem.innerHTML =
+            "<span>" + expense.name + " — $" + expense.amount.toFixed(2) + "</span>" +
+            "<span class='expense-category-tag'>" + expense.category + "</span>";
+
+        expenseListEl.appendChild(listItem);
     }
 }
 
-runBudgetSummary();
+// Update the summary section (total spent, remaining balance, warning)
+function updateSummary() {
+    let totalExpenses = calculateTotalExpenses(expenses);
+    let remainingBalance = calculateRemainingBalance(monthlyBudget, totalExpenses);
 
-// getUserBudget();
-// getNewExpense();
-// runBudgetSummary();
+    totalSpentEl.textContent = "$" + totalExpenses.toFixed(2);
+    remainingBalanceEl.textContent = "$" + remainingBalance.toFixed(2);
+
+    // Decision making with conditionals
+    if (remainingBalance < 0) {
+        budgetWarningEl.textContent = "Warning: You are over budget by $" + Math.abs(remainingBalance).toFixed(2) + "!";
+    } else if (remainingBalance < monthlyBudget * 0.1) {
+        budgetWarningEl.textContent = "Careful — you're close to your budget limit.";
+    } else {
+        budgetWarningEl.textContent = "You're on track this month.";
+    }
+}
+
+// Run both update functions together
+function refreshDashboard() {
+    renderExpenseList();
+    updateSummary();
+}
+
+// 5. Event listeners — handle user interactions
+
+setBudgetBtn.addEventListener("click", function () {
+    let value = Number(budgetInput.value);
+
+    if (budgetInput.value === "" || isNaN(value) || value <= 0) {
+        budgetStatus.textContent = "Please enter a valid budget amount.";
+        return;
+    }
+
+    monthlyBudget = value;
+    budgetStatus.textContent = "Budget set to $" + monthlyBudget.toFixed(2);
+    budgetInput.value = "";
+    updateSummary();
+});
+
+addExpenseBtn.addEventListener("click", function () {
+    let name = expenseNameInput.value.trim();
+    let amount = Number(expenseAmountInput.value);
+    let category = expenseCategoryInput.value;
+
+    // Validate input before adding
+    if (name === "" || isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid expense name and amount.");
+        return;
+    }
+
+    let newExpense = {
+        name: name,
+        amount: amount,
+        category: category
+    };
+
+    expenses.push(newExpense);
+
+    // Clear the form
+    expenseNameInput.value = "";
+    expenseAmountInput.value = "";
+
+    // Update the dashboard with the new data
+    refreshDashboard();
+});
+
+// 6. Initial render when the page loads
+refreshDashboard();
